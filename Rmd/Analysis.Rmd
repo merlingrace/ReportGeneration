@@ -1,0 +1,153 @@
+---
+title: "Discount - Sales Analysis"
+author: "Merly Varghese"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: cerulean
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library(prettydoc)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+&nbsp;
+
+## What is  linear regression ?
+
+Linear regression is a commonly used technique in predictive analytics, which build a model to explain the change in one variable based on the linear relationship with other variables. 
+Linear Regression can be classified as follows:
+
+*  __*Simple Linear Regression*__ :  A single variable can explain the change in the dependent variable.
+*  __*Multiple Linear Regression*__ :  Change in the dependent variable can be explained by multiple variables.
+
+## About Data
+
+Data used for this analysis is the dummy data generated for sales of different category of items in an outlet. The column names are described below
+
+*  __*UPC*__  : Unique Product Code of the item
+*  __*Category*__  : Category name. The categories included in the data are
+Vegetable & fruits, meat & fish , snacks, diary and Care products.
+*  __*Price*__  : Price per unit of the item ( INR)
+*  __*Discount*__  : Discount applied for the item.(%)
+*  __*Sales*__  : Total sales recorded for the item after the discount applied (INR)
+
+## Objective
+
+Analyze how percentage of discount influence the product sales in different categories and predict sales using the data provided 
+
+
+## Data exploration
+
+In the data, all categories have around 80 unique items and the plot given below explains the combined sales of products across all categories.
+
+&nbsp;
+
+```{r load_library, echo=FALSE,warning=FALSE,include=FALSE}
+library(openxlsx)
+library(data.table)
+library(dplyr)
+library(ggplot2)
+
+```
+
+```{r source_code, echo=FALSE,warning=FALSE,include=FALSE}
+
+source("../R/functions.R")
+```
+
+```{r read_data, echo=FALSE,warning=FALSE,fig.width=5,fig.height=3}
+#Read data
+sales_data <- read.xlsx("../Data/Sales_Data.xlsx")
+sales_data <- sales_data %>% data.table()
+#aggregate  data  and find total sale in each category
+sales_data_agg <- sales_data %>% .[,.(TotalSales =sum(Sales)
+                                                      ,UpcCount = .N)
+                                                      ,by = (Category)]
+#Visualize the total sales
+plot1 <- ggplot(data = sales_data_agg
+       ,aes(x =Category,y= TotalSales,fill =Category ))+
+        geom_bar(stat = "identity",width = .5,) +
+        theme(panel.grid.major = element_blank()
+              , panel.grid.minor = element_blank()
+              , panel.background = element_blank()
+              , axis.line = element_line(colour = "black")
+              , legend.position="none"
+              ) +
+          ggtitle("Total Sales :  Category")
+
+plot1 + coord_flip() #for horizontal alignment
+
+```
+
+
+&nbsp;
+
+The major part of the sales is made by food products such as Vegetable & Fruits and Meat &fish. Items under the category care products has comparatively less sales among all the categories.
+
+## Category Wise Analysis{.tabset}
+
+
+```{r models, echo=FALSE,warning=FALSE,fig.width=5,fig.height=3}
+
+snack_model <- get_model(sales_data,"SNACKS")
+veg_model <-  get_model(sales_data,"VEGETABLE&FRUITS")
+meat_model <- get_model(sales_data,"MEAT&FISH")
+care_model <-  get_model(sales_data,"CARE PRODUCTS")
+diary_model <- get_model(sales_data,"DIARY")
+```
+
+### VEGETABLE&FRUITS
+
+
+
+
+Linear model equation :
+
+$$ Sales = `r round(veg_model[[2]])` * Price + `r veg_model[[3]]` * Discount + `r veg_model[[1]]`$$
+
+$$Adjusted R-squre  = `r round(veg_model[[4]])`$$
+**Conclusion** :
+
+Discount has a positive correlation with the sales.ie, as Discount increases, a similar increasing trend visible in sales.
+
+
+### SNACKS
+
+Linear model equation :
+
+$$ Sales = `r round(snack_model[[2]])` * Price + `r snack_model[[3]]` * Discount + `r snack_model[[1]]`$$
+
+$$Adjusted Rsqure  = `r round(snack_model[[4]])`$$
+
+### MEAT&FISH
+
+Linear model equation :
+
+$$ Sales = `r round(meat_model[[2]])` * Price + `r meat_model[[3]]` * Discount + `r meat_model[[1]]`$$
+
+$$Adjusted Rsqure  = `r round(meat_model[[4]])`$$
+
+### CARE PRODUCTS
+
+Linear model equation :
+
+$$ Sales = `r round(care_model[[2]])` * Price + `r care_model[[3]]` * Discount + `r care_model[[1]]`$$
+
+$$Adjusted Rsqure  = `r round(care_model[[4]])`$$
+
+
+### DIARY
+
+
+Linear model equation :
+
+$$ Sales = `r round(diary_model[[2]])` * Price + `r diary_model[[3]]` * Discount + `r diary_model[[1]]`$$
+
+$$Adjusted Rsqure  = `r round(diary_model[[4]])`$$
+
